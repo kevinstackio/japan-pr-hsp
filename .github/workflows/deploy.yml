@@ -62,20 +62,15 @@ jobs:
   reindex_algolia:
     runs-on: ubuntu-latest
     needs: deploy
-    if: ${{ needs.deploy.result == 'success' && secrets.ALGOLIA_CRAWLER_ID != '' && (secrets.ALGOLIA_CRAWLER_BASIC_AUTH != '' || (secrets.ALGOLIA_CRAWLER_USER_ID != '' && secrets.ALGOLIA_CRAWLER_API_KEY != '')) }}
+    if: ${{ needs.deploy.result == 'success' && secrets.ALGOLIA_CRAWLER_ID != '' && secrets.ALGOLIA_CRAWLER_USER_ID != '' && secrets.ALGOLIA_CRAWLER_API_KEY != '' }}
     steps:
       - name: Trigger Algolia crawler reindex
         env:
           CRAWLER_ID: ${{ secrets.ALGOLIA_CRAWLER_ID }}
-          CRAWLER_BASIC_AUTH: ${{ secrets.ALGOLIA_CRAWLER_BASIC_AUTH }}
           CRAWLER_USER_ID: ${{ secrets.ALGOLIA_CRAWLER_USER_ID }}
           CRAWLER_API_KEY: ${{ secrets.ALGOLIA_CRAWLER_API_KEY }}
         run: |
-          if [ -n "$CRAWLER_BASIC_AUTH" ]; then
-            auth="$CRAWLER_BASIC_AUTH"
-          else
-            auth="$(printf '%s:%s' "$CRAWLER_USER_ID" "$CRAWLER_API_KEY" | base64 | tr -d '\n')"
-          fi
+          auth="$(printf '%s:%s' "$CRAWLER_USER_ID" "$CRAWLER_API_KEY" | base64 | tr -d '\n')"
           response="$(curl --silent --show-error --fail \
             --request POST \
             --url "https://crawler.algolia.com/api/1/crawlers/${CRAWLER_ID}/reindex" \
